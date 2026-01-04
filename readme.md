@@ -459,7 +459,7 @@ Patching the font of your own choosing:
   ```
   * Run interatively to get full control of `font-patcher` invocation and all debug output and error messages:
   ```
-  docker run -it v /path/to/fonts:/in:Z --entrypoint=/bin/sh nerdfonts/patcher
+  docker run -it -v /path/to/fonts:/in:Z --entrypoint=/bin/sh nerdfonts/patcher
   ```
   And then in the container for example:
   ```
