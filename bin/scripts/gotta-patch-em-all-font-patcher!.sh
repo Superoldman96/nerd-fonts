@@ -149,8 +149,14 @@ then
     like_pattern=".*$1/.*\.\(otf\|ttf\|sfd\)"
     echo "$LINE_PREFIX Filter given, limiting search and patch to pathname pattern '$1'"
   else
-    like_pattern=".*/$1[^/]*\.\(otf\|ttf\|sfd\)"
-    echo "$LINE_PREFIX Filter given, limiting search and patch to filename pattern '$1'"
+    # Filename filter: match fonts that start with the filter
+    find_cmd_args=(-iname "${filter_arg}*.ttf" -o -iname "${filter_arg}*.otf" -o -iname "${filter_arg}*.sfd")
+    find_path_filter=""
+    find_path_pattern=""
+    find_path_filter_with_pattern=()
+    echo "$LINE_PREFIX Filter given, limiting search and patch to filename pattern '$filter_arg'"
+    # Pattern for filename filter: match files that start with the filter
+    like_pattern=".*/${filter_arg}[^/]*\.\(otf\|ttf\|sfd\)"
   fi
 fi
 
@@ -341,8 +347,32 @@ then
       # to follow font naming changed. We can not do this if we patch only
       # some of the source font files in that directory.
       last_source_dir=${current_source_dir}
-      num_to_patch=$(find "${current_source_dir}" -iregex "${like_pattern}" -type f | wc -l)
-      num_existing=$(find "${current_source_dir}" -iname "*.[ot]tf" -o -iname "*.sfd" -type f | wc -l)
+      # Count fonts matching the filter criteria in this directory
+      if [ -n "${filter_arg:-}" ]
+      then
+        if [[ "${filter_arg:0:1}" == "/" ]]
+        then
+          # Directory filter: count fonts matching the -ipath pattern "*${filter_dir}/*"
+          # Verify that fonts are in the current directory AND match the filter_dir pattern
+          filter_dir="${filter_arg#/}"  # Remove leading /
+          num_to_patch=0
+          for font_path in "${source_fonts[@]}"; do
+            # Check that font is in current directory AND path contains the filter_dir pattern
+            if [[ "$(dirname "$font_path")" == "$current_source_dir" ]] && \
+               [[ "$font_path" == *"${filter_dir}"* ]]; then
+              ((num_to_patch++))
+            fi
+          done
+        else
+          # Filename filter: count fonts that start with the filter
+          num_to_patch=$(find "${current_source_dir}" "(" -iname "${filter_arg}*.ttf" -o -iname "${filter_arg}*.otf" -o -iname "${filter_arg}*.sfd" ")" -type f | wc -l)
+        fi
+      else
+        # No filter: count all fonts in directory
+        num_to_patch=$(find "${current_source_dir}" "(" -iname "*.ttf" -o -iname "*.otf" -o -iname "*.sfd" ")" -type f | wc -l)
+      fi
+      # Always count all fonts in directory for comparison
+      num_existing=$(find "${current_source_dir}" "(" -iname "*.ttf" -o -iname "*.otf" -o -iname "*.sfd" ")" -type f | wc -l)
       if [ "${num_to_patch}" -eq "${num_existing}" ]
       then
         purge_destination="TRUE"
