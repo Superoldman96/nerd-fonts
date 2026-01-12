@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Nerd Fonts Version: 3.4.0
-# Script Version: 1.4.5
+# Script Version: 1.4.6
 #
 # You can supply options to the font-patcher via environment variable NERDFONTS
 # That option will override the defaults (also defaults of THIS script).
@@ -210,18 +210,12 @@ then
   export SOURCE_DATE_EPOCH=$(date +%s)
 fi
 # Detect GNU vs BSD date implementations reliably
-if date --version >/dev/null 2>&1; then
+if date -R "--date=@${SOURCE_DATE_EPOCH}" >/dev/null 2>&1; then
   # GNU date (Linux and others)
-  release_timestamp=$(date -R "--date=@${SOURCE_DATE_EPOCH}" 2>/dev/null) || {
-    echo >&2 "$LINE_PREFIX Invalid release timestamp SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH}"
-    exit 2
-  }
+  release_timestamp=$(date -R "--date=@${SOURCE_DATE_EPOCH}" 2>/dev/null)
 elif date -r "${SOURCE_DATE_EPOCH}" "+%a, %d %b %Y %H:%M:%S %z" >/dev/null 2>&1; then
   # BSD date (macOS) - uses -r with epoch seconds
-  release_timestamp=$(date -r "${SOURCE_DATE_EPOCH}" "+%a, %d %b %Y %H:%M:%S %z") || {
-    echo >&2 "$LINE_PREFIX Invalid release timestamp SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH}"
-    exit 2
-  }
+  release_timestamp=$(date -r "${SOURCE_DATE_EPOCH}" "+%a, %d %b %Y %H:%M:%S %z")
 else
   echo >&2 "$LINE_PREFIX Invalid release timestamp SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH}"
   exit 2

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Nerd Fonts Version: 3.4.0
-# Script Version: 1.0.1
+# Script Version: 1.0.2
 # Generates original-source.otf from individual glyphs
 #
 # Idea & original code taken from
