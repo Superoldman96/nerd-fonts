@@ -212,11 +212,16 @@ fi
 # Detect GNU vs BSD date implementations reliably
 if date --version >/dev/null 2>&1; then
   # GNU date (Linux and others)
-  release_timestamp=$(date -R "--date=@${SOURCE_DATE_EPOCH}")
+  release_timestamp=$(date -R "--date=@${SOURCE_DATE_EPOCH}" 2>/dev/null) || {
+    echo >&2 "$LINE_PREFIX Invalid release timestamp SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH}"
+    exit 2
+  }
 elif date -r "${SOURCE_DATE_EPOCH}" "+%a, %d %b %Y %H:%M:%S %z" >/dev/null 2>&1; then
   # BSD date (macOS) - uses -r with epoch seconds
-
-  release_timestamp=$(date -r "${SOURCE_DATE_EPOCH}" "+%a, %d %b %Y %H:%M:%S %z")
+  release_timestamp=$(date -r "${SOURCE_DATE_EPOCH}" "+%a, %d %b %Y %H:%M:%S %z") || {
+    echo >&2 "$LINE_PREFIX Invalid release timestamp SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH}"
+    exit 2
+  }
 else
   echo >&2 "$LINE_PREFIX Invalid release timestamp SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH}"
   exit 2
@@ -243,12 +248,19 @@ function patch_font {
       # Adjust timestamp using the same GNU/BSD date detection logic
       if date --version >/dev/null 2>&1; then
         # GNU date
-        adjusted_timestamp=$(date -R "--date=@${SOURCE_DATE_EPOCH}")
+        adjusted_timestamp=$(date -R "--date=@${SOURCE_DATE_EPOCH}" 2>/dev/null) || {
+          echo >&2 "$LINE_PREFIX Invalid adjusted timestamp SOURCE_DATE_EPOCH calculated from font metadata: ${SOURCE_DATE_EPOCH}"
+          exit 2
+        }
       elif date -r "${SOURCE_DATE_EPOCH}" "+%a, %d %b %Y %H:%M:%S %z" >/dev/null 2>&1; then
         # BSD date
-        adjusted_timestamp=$(date -r "${SOURCE_DATE_EPOCH}" "+%a, %d %b %Y %H:%M:%S %z")
+        adjusted_timestamp=$(date -r "${SOURCE_DATE_EPOCH}" "+%a, %d %b %Y %H:%M:%S %z") || {
+          echo >&2 "$LINE_PREFIX Invalid adjusted timestamp SOURCE_DATE_EPOCH calculated from font metadata: ${SOURCE_DATE_EPOCH}"
+          exit 2
+        }
       else
-        adjusted_timestamp="unknown"
+        echo >&2 "$LINE_PREFIX Unable to convert adjusted timestamp SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH} (no compatible date command found)"
+        exit 2
       fi
       echo "$LINE_PREFIX Release timestamp adjusted to ${adjusted_timestamp}"
     fi
