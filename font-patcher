@@ -370,7 +370,7 @@ class font_patcher:
 
         # Prevent opening and closing the fontforge font. Makes things faster when patching
         # multiple ranges using the same symbol font.
-        PreviousSymbolFilename = ""
+        PreviousSymbol = ""
         symfont = None
 
         if not os.path.isdir(self.args.glyphdir):
@@ -383,26 +383,35 @@ class font_patcher:
 
         for patch in self.patch_set:
             if patch['Enabled']:
-                if PreviousSymbolFilename != patch['Filename']:
+                if 'Filename' in patch and 'Font' in patch:
+                    logger.critical("Conflicting patch params: Filename and Font")
+                    sys.exit(1)
+
+                use_Filename = 'Filename' in patch
+                if (use_Filename and PreviousSymbol != patch['Filename']) or (not use_Filename and PreviousSymbol != patch['Font']):
                     # We have a new symbol font, so close the previous one if it exists
                     if symfont:
                         symfont.close()
                         symfont = None
-                    symfont_file = os.path.join(self.args.glyphdir, patch['Filename'])
-                    if not os.path.isfile(symfont_file):
-                        logger.critical("Can not find symbol source for '%s' (i.e. %s)",
-                            patch['Name'], symfont_file)
-                        sys.exit(1)
-                    if not os.access(symfont_file, os.R_OK):
-                        logger.critical("Can not open symbol source for '%s' (i.e. %s)",
-                            patch['Name'], symfont_file)
-                        sys.exit(1)
-                    symfont = fontforge.open(symfont_file)
+                    if use_Filename:
+                        symfont_file = os.path.join(self.args.glyphdir, patch['Filename'])
+                        if not os.path.isfile(symfont_file):
+                            logger.critical("Can not find symbol source for '%s' (i.e. %s)",
+                                patch['Name'], symfont_file)
+                            sys.exit(1)
+                        if not os.access(symfont_file, os.R_OK):
+                            logger.critical("Can not open symbol source for '%s' (i.e. %s)",
+                                patch['Name'], symfont_file)
+                            sys.exit(1)
+                        symfont = fontforge.open(symfont_file)
+                        PreviousSymbol = patch['Filename']
+                    else:
+                        symfont = patch['Font']()
+                        PreviousSymbol = patch['Font']
                     symfont.encoding = 'UnicodeFull'
 
                     # Match the symbol font size to the source font size
                     symfont.em = self.sourceFont.em
-                    PreviousSymbolFilename = patch['Filename']
 
                 # If patch table doesn't include a source start, re-use the symbol font values
                 SrcStart = patch['SrcStart']
@@ -1119,6 +1128,17 @@ class font_patcher:
 
         # Define the character ranges
         # Symbol font ranges
+        # Fonts can be imported in two ways:
+        #   - Filename
+        #       File path relative to glyphdir.
+        #   - Font
+        #       A hook function has a return value of type `fontforge.font`. 
+        #       This hook function will be called before `copy_glyphs`.
+        #       This provides greater flexibility when complex adjustments/generation  based on the sourceFont are required.
+        # Note: 
+        #   Only one of the two can exist.
+        #   When complex dynamic adjustments/generation based on sourceFont are unnecessary, 
+        #   it is better to use `Filename`, then adjust via attributes (in fact, this is more usual).
         self.patch_set = [
             {'Enabled': True,                           'Name': "Seti-UI + Custom",        'Filename': "original-source.otf",                            'Exact': False, 'SymStart': 0xE4FA, 'SymEnd': 0xE5FF, 'SrcStart': 0xE5FA, 'ScaleRules': None,             'Attributes': SYM_ATTR_DEFAULT},
             {'Enabled': True,                           'Name': "Heavy Angle Brackets",    'Filename': "extraglyphs.sfd",                                'Exact': True,  'SymStart': 0x276C, 'SymEnd': 0x2771, 'SrcStart': None,   'ScaleRules': HEAVY_SCALE_LIST, 'Attributes': SYM_ATTR_HEAVYBRACKETS},
