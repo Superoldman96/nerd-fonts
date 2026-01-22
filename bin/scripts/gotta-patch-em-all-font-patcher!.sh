@@ -30,7 +30,6 @@ sd="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 || exit ; pwd -P )"
 
 repo_root_dir=$(dirname "$(dirname "${sd}")") # two levels up (i.e. ../../)
 # Set source and target directories
-like_pattern='.*\.\(otf\|ttf\|sfd\)'
 last_font_root=""
 unpatched_parent_dir="src/unpatched-fonts"
 patched_parent_dir="patched-fonts"
@@ -155,28 +154,20 @@ then
     # For directory filter, -ipath must be outside the parentheses grouping
     find_cmd_args=(-iname "*.ttf" -o -iname "*.otf" -o -iname "*.sfd")
     find_path_filter="-ipath"
-    find_path_pattern="*${filter_dir}/*"
     find_path_filter_with_pattern=(-ipath "*${filter_dir}/*")
     echo "$LINE_PREFIX Filter given, limiting search and patch to pathname pattern '$filter_arg'"
-    # Pattern for directory filter: match paths containing the directory
-    like_pattern=".*/${filter_dir}/.*\.\(otf\|ttf\|sfd\)"
   else
     # Filename filter: match fonts with filter in filename
     find_cmd_args=(-iname "*${filter_arg}*.ttf" -o -iname "*${filter_arg}*.otf" -o -iname "*${filter_arg}*.sfd")
     find_path_filter=""
-    find_path_pattern=""
     find_path_filter_with_pattern=()
     echo "$LINE_PREFIX Filter given, limiting search and patch to filename pattern '$filter_arg'"
-    # Pattern for filename filter: match filter in filename
-    like_pattern=".*${filter_arg}.*\.\(otf\|ttf\|sfd\)"
   fi
 else
   # No filter
   find_cmd_args=(-iname "*.ttf" -o -iname "*.otf" -o -iname "*.sfd")
   find_path_filter=""
-  find_path_pattern=""
   find_path_filter_with_pattern=()
-  like_pattern='.*\.\(otf\|ttf\|sfd\)'
 fi
 
 # correct way to output find results into an array (when files have space chars, etc)
@@ -207,7 +198,8 @@ echo "$LINE_PREFIX Total source fonts found: ${#source_fonts[*]}"
 # Use one date-time for ALL fonts and for creation and modification date in the font file
 if [ -z "${SOURCE_DATE_EPOCH}" ]
 then
-  export SOURCE_DATE_EPOCH=$(date +%s)
+  SOURCE_DATE_EPOCH=$(date +%s)
+  export SOURCE_DATE_EPOCH
 fi
 # Detect GNU vs BSD date implementations reliably
 if date -R "--date=@${SOURCE_DATE_EPOCH}" >/dev/null 2>&1; then
@@ -233,7 +225,8 @@ function patch_font {
     # take everything before the last slash (/) to start building the full path
     local ts_font_dir="${f%/*}/"
     local ts_font_dir="${ts_font_dir/$unpatched_parent_dir/$timestamp_parent_dir}"
-    local one_font=$(find "${ts_font_dir}" -name '*.[ot]tf' | head -n 1)
+    local one_font
+    one_font=$(find "${ts_font_dir}" -name '*.[ot]tf' | head -n 1)
     if [ -n "${one_font}" ]
     then
       orig_font_date=$(ttfdump -t head "${one_font}" | \
@@ -353,7 +346,8 @@ function generate_info {
 
   [[ -d "$patched_font_dir" ]] || mkdir -p "$patched_font_dir"
 
-  local font_root=$(echo "$patched_font_dir" | sed "s|.*$patched_parent_dir/||;s|/.*||")
+  local font_root
+  font_root=$(echo "$patched_font_dir" | sed "s|.*$patched_parent_dir/||;s|/.*||")
   # if first time with this font then re-build parent dir readme, else skip:
   if [ "$last_font_root" != "$font_root" ]
   then
