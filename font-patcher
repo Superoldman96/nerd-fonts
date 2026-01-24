@@ -1882,9 +1882,7 @@ class font_patcher:
         width = self.font_dim["width"]
         ymax = self.font_dim["ymax"]
         ymin = self.font_dim["ymin"]
-        descent = self.sourceFont.descent
-        ascent = self.sourceFont.ascent
-        return get_braille_font(self.sourceFont.em, width, ymax, ymin, descent, ascent , 0.6)
+        return get_braille_font(self.sourceFont.em, width, ymax, ymin, 0.6)
 
 def half_gap(gap, top):
     """ Divides integer value into two new integers """
@@ -2097,6 +2095,7 @@ def setup_arguments():
     #  6  HugoSansMono NF XCn Lt It                                [X] [X] [X]
 
     sym_font_group = parser.add_argument_group('Symbol Fonts')
+    sym_font_group.add_argument('--braille',                                    dest='braille',              default=False, action='store_true', help='Add Braille Glyphs')
     sym_font_group.add_argument('--complete', '-c',                             dest='complete',             default=False, action='store_true', help='Add all available Glyphs')
     sym_font_group.add_argument('--codicons',                                   dest='codicons',             default=False, action='store_true', help='Add Codicons Glyphs (https://github.com/microsoft/vscode-codicons)')
     sym_font_group.add_argument('--fontawesome',                                dest='fontawesome',          default=False, action='store_true', help='Add Font Awesome Glyphs (http://fontawesome.io/)')

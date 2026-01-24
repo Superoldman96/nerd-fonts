@@ -51,21 +51,16 @@ def draw_braille_glyph(glyph, idx, width, ymax, ymin, r):
     pen = None
 
 
-def set_scent(font, ymax, ymin, ascent, descent):
+def set_scent(font, ymax, ymin):
     """" Set ascent and descent """
     # This may not impact the final patch result,
     # but to better check middle result, we set them.
-    # Note: Sometimes `ymax` may exceed `ascent`. 
-    #       This is because some fonts have a system ascent (e.g., `hhea_ascent`) that bigger than 
-    #       their own `ascent` value. Setting `font.ascent` directly to `ymax` may cause the height to 
-    #       exceed the em, triggering the em adjustment mechanism and resulting in errors.
-    font.ascent = ascent
-    font.descent = descent
-
     # We set them simply, because this is enough
     # to reveal the true situation when we check the middle result.
     font.hhea_ascent = ymax
     font.hhea_descent = ymin
+    font.hhea_ascent_add = 0
+    font.hhea_descent_add = 0
     font.hhea_linegap = 0
 
     font.os2_winascent = ymax
@@ -75,11 +70,13 @@ def set_scent(font, ymax, ymin, ascent, descent):
 
     font.os2_typoascent = ymax
     font.os2_typodescent = ymin
+    font.os2_typoascent_add = 0
+    font.os2_typodescent_add = 0
     font.os2_typolinegap = 0
 
 
 
-def get_braille_font(em, width, ymax, ymin, descent, ascent, r_ratio):
+def get_braille_font(em, width, ymax, ymin, r_ratio):
     """ Get braille font where the ratio of the radius to the shortest distance from the center is `r_ratio` """
     braille_font = fontforge.font()
 
@@ -92,15 +89,16 @@ def get_braille_font(em, width, ymax, ymin, descent, ascent, r_ratio):
     braille_font.version = "1.0.0"
 
     braille_font.em = em
-    set_scent(braille_font, ymax, ymin, descent, ascent)
+    set_scent(braille_font, ymax, ymin)
 
     r = min(width / 4, (ymax - ymin) / 8) * r_ratio
 
     START = 0x2800
     END = 0x28FF
     for i in range(START, END + 1):
-        glyph = braille_font.createChar(i)
+        idx = i - START
+        glyph = braille_font.createChar(i, f'braille-{idx}')
         glyph.width = width
-        draw_braille_glyph(glyph, i - START, width, ymax, ymin, r)
+        draw_braille_glyph(glyph, idx, width, ymax, ymin, r)
 
     return braille_font
