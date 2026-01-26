@@ -22,6 +22,20 @@ def get_circle_center(dot, width, ymax, ymin):
     return (x0 + col * width / 2, y0 - row * height / 4)
 
 
+def draw_rectangle(pen, center, rx, ry):
+    """ Control the pen to draw a rectangle """
+
+    cx, cy = center
+
+    pen.moveTo((cx - rx, cy + ry))
+    pen.lineTo((cx + rx, cy + ry))
+    pen.lineTo((cx + rx, cy - ry))
+    pen.lineTo((cx - rx, cy - ry))
+    pen.lineTo((cx - rx, cy + ry))
+
+    pen.closePath()
+
+
 def draw_circle(pen, center, r):
     """ Control the pen to draw a circle """
     K = 4 / 3 * (math.sqrt(2) - 1)  # a ratio for determining control points
@@ -41,13 +55,16 @@ def draw_circle(pen, center, r):
     pen.closePath()
 
 
-def draw_braille_glyph(glyph, idx, width, ymax, ymin, r):
+def draw_braille_glyph(glyph, idx, width, ymax, ymin, style, rx, ry):
     """ Draw the braille glyph with the corresponding number """
     pen = glyph.glyphPen()
     for i in range(8):
         if (1 << i) & idx > 0:
             center = get_circle_center(i, width, ymax, ymin)
-            draw_circle(pen, center, r)
+            if style == 'rectangle':
+                draw_rectangle(pen, center, rx, ry)
+            elif style == 'circle':
+                draw_circle(pen, center, min(rx, ry))
     pen = None
 
 
@@ -76,8 +93,11 @@ def set_scent(font, ymax, ymin):
 
 
 
-def get_braille_font(em, width, ymax, ymin, r_ratio):
-    """ Get braille font where the ratio of the radius to the shortest distance from the center is `r_ratio` """
+def get_braille_font(em, width, ymax, ymin, style, r_ratio):
+    """
+    Get braille font
+    r_ratio: the maximum ratio occupied in the horizontal and vertical directions
+    """
     braille_font = fontforge.font()
 
     braille_font.fontname = "BrailleFont-Regular"
@@ -91,7 +111,11 @@ def get_braille_font(em, width, ymax, ymin, r_ratio):
     braille_font.em = em
     set_scent(braille_font, ymax, ymin)
 
-    r = min(width / 4, (ymax - ymin) / 8) * r_ratio
+    if style == 'gapless':
+        r_ratio = 1
+        style = 'rectangle'
+    rx = width / 4 *r_ratio
+    ry = (ymax - ymin) / 8 * r_ratio
 
     START = 0x2800
     END = 0x28FF
@@ -99,6 +123,7 @@ def get_braille_font(em, width, ymax, ymin, r_ratio):
         idx = i - START
         glyph = braille_font.createChar(i, f'braille-{idx}')
         glyph.width = width
-        draw_braille_glyph(glyph, idx, width, ymax, ymin, r)
+        draw_braille_glyph(glyph, idx, width, ymax, ymin, style, rx, ry)
 
     return braille_font
+
