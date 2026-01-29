@@ -972,7 +972,7 @@ class font_patcher:
         }
         SYM_ATTR_BRAILLE = {
             # Don't scale because we generate font in the suitable size directly
-            'default': {'align': 'c', 'valign': 'c', 'stretch': '', 'params': {}}
+            'default': {'align': '', 'valign': '', 'stretch': '', 'params': {}}
         }
         SYM_ATTR_HEAVYBRACKETS = {
             'default': {'align': 'c', 'valign': 'c', 'stretch': '^pa1!', 'params': {'ypadding': 0.3, 'careful': True}}
@@ -1056,9 +1056,6 @@ class font_patcher:
             [*range(0x2500, 0x2570 + 1), *range(0x2574, 0x257f + 1)], # box drawing
             range(0x2571, 0x2573 + 1), # diagonals
             range(0x2580, 0x259f + 1), # blocks and greys (greys are less tall originally, so overlap will be less)
-        ]}
-        BRAILLE_SCALE_LIST = {'ShiftMode': '', 'ScaleGroups': [
-            range(0x2800, 0x28ff + 1), # all Braille glyphs
         ]}
         CODI_SCALE_LIST = {'ShiftMode': 'xy', 'ScaleGroups': [
             [0xea61, 0xeb13], # lightbulb
@@ -1180,7 +1177,7 @@ class font_patcher:
             {'Enabled': self.args.octicons,             'Name': "Octicons",                'Filename': "octicons/octicons.otf",                          'Exact': True,  'SymStart': 0X26A1, 'SymEnd': 0X26A1, 'SrcStart': None,   'ScaleRules': OCTI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},  # Zap
             {'Enabled': self.args.octicons,             'Name': "Octicons",                'Filename': "octicons/octicons.otf",                          'Exact': False, 'SymStart': 0xF27C, 'SymEnd': 0xF306, 'SrcStart': 0xF4A9, 'ScaleRules': OCTI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},
             {'Enabled': self.args.codicons,             'Name': "Codicons",                'Filename': "codicons/codicon.ttf",                           'Exact': True,  'SymStart': 0xEA60, 'SymEnd': 0xEC1E, 'SrcStart': None,   'ScaleRules': CODI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},
-            {'Enabled': self.args.braille,              'Name': "Braille",                 'Font'    : self.get_braille_font,                            'Exact': True,  'SymStart': 0x2800, 'SymEnd': 0x28FF, 'SrcStart': None,   'ScaleRules': BRAILLE_SCALE_LIST, 'Attributes': SYM_ATTR_BRAILLE},
+            {'Enabled': self.args.braille,              'Name': "Braille",                 'Font'    : self.get_braille_font,                            'Exact': True,  'SymStart': 0x2800, 'SymEnd': 0x28FF, 'SrcStart': None,   'ScaleRules': None,             'Attributes': SYM_ATTR_BRAILLE},
             {'Enabled': self.args.custom,               'Name': "Custom",                  'Filename': self.args.custom,                                 'Exact': True,  'SymStart': 0x0000, 'SymEnd': 0x0000, 'SrcStart': None,   'ScaleRules': None,             'Attributes': CUSTOM_ATTR}
         ]
 
