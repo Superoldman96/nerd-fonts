@@ -1,11 +1,15 @@
+#!/usr/bin/env python
+# coding=utf8
+
 import fontforge
 import math
 
 
 def get_circle_center(dot, width, ymax, ymin):
     """ Get the center of the circle centered at the point with ID `dot` """
-    # Note dots' position(a little strange):
-    # 0 3 
+    # The dot ID is one less than the official dot number
+    # Note dots' position (a little strange):
+    # 0 3
     # 1 4
     # 2 5
     # 6 7
@@ -92,7 +96,6 @@ def set_scent(font, ymax, ymin):
     font.os2_typolinegap = 0
 
 
-
 def get_braille_font(em, width, ymax, ymin, style, r_ratio):
     """
     Get braille font
@@ -114,16 +117,15 @@ def get_braille_font(em, width, ymax, ymin, style, r_ratio):
     if style == 'gapless':
         r_ratio = 1
         style = 'rectangle'
-    rx = width / 4 *r_ratio
+    rx = width / 4 * r_ratio
     ry = (ymax - ymin) / 8 * r_ratio
 
     START = 0x2800
     END = 0x28FF
     for i in range(START, END + 1):
         idx = i - START
-        glyph = braille_font.createChar(i, f'braille-{idx}')
+        glyph = braille_font.createChar(i, f'uni{i:04X}')
         glyph.width = width
         draw_braille_glyph(glyph, idx, width, ymax, ymin, style, rx, ry)
 
     return braille_font
-
