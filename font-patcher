@@ -46,6 +46,13 @@ try:
 except ImportError:
     FontnameParserOK = False
 
+sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'bin', 'scripts', 'braille'))
+try:
+    from Braille import get_braille_font
+    BrailleGenerator = True
+except ImportError:
+    BrailleGenerator = False
+
 class TableHEADWriter:
     """ Access to the HEAD table without external dependencies """
     def getlong(self, pos = None):
@@ -1873,12 +1880,6 @@ class font_patcher:
 
     def get_braille_font(self):
         """ Get suitable braille font """
-        sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'bin', 'scripts', 'braille'))
-        try:
-            from Braille import get_braille_font
-        except ImportError:
-            logger.critical("Braille module missing (bin/scripts/braille/Braille.py)")
-            sys.exit(1)
         width = self.font_dim["width"]
         ymax = self.font_dim["ymax"]
         ymin = self.font_dim["ymin"]
@@ -2159,9 +2160,12 @@ def setup_arguments():
         logger.critical("FontnameParser module missing (bin/scripts/name_parser/Fontname*), specify --makegroups 0")
         sys.exit(1)
 
+    if args.braille and not BrailleGenerator:
+        logger.critical("Braille module missing (bin/scripts/braille/Braille.py), do not include Braille Glyphs")
+        sys.exit(1)
+
     # if you add a new font, set it to True here inside the if condition
     if args.complete:
-        args.braille = True
         args.codicons = True
         args.fontawesome = True
         args.fontawesomeextension = True
@@ -2173,6 +2177,10 @@ def setup_arguments():
         args.powerlineextra = True
         args.powersymbols = True
         args.weather = True
+        if BrailleGenerator:
+            args.braille = True
+        else:
+            logger.warning("Braille module missing (bin/scripts/braille/Braille.py), generating font without Braille Glyphs!")
 
     if not args.complete:
         sym_font_args = []
