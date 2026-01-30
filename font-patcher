@@ -573,6 +573,9 @@ class font_patcher:
             if self.args.weather:
                 additionalFontNameSuffix += " WEA"
                 verboseAdditionalFontNameSuffix += " Plus Weather Icons"
+            if self.args.braille:
+                additionalFontNameSuffix += " B"
+                verboseAdditionalFontNameSuffix += " Plus Braille Icons"
 
         # add mono signifier to beginning of name suffix
         if self.args.single:
