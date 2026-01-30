@@ -2096,7 +2096,7 @@ def setup_arguments():
     #  6  HugoSansMono NF XCn Lt It                                [X] [X] [X]
 
     sym_font_group = parser.add_argument_group('Symbol Fonts')
-    sym_font_group.add_argument('--braille',                                    dest='braille',              default=False, action='store_true', help='Add Braille Glyphs')
+    sym_font_group.add_argument('--braille',                                    dest='braille',              default=False, const='rectangle',   help='Add Braille Glyphs, can pass a string to control style (optional: *rectangle, circle, gapless)', nargs='?', choices=['rectangle', 'circle', 'gapless'])
     sym_font_group.add_argument('--complete', '-c',                             dest='complete',             default=False, action='store_true', help='Add all available Glyphs')
     sym_font_group.add_argument('--codicons',                                   dest='codicons',             default=False, action='store_true', help='Add Codicons Glyphs (https://github.com/microsoft/vscode-codicons)')
     sym_font_group.add_argument('--fontawesome',                                dest='fontawesome',          default=False, action='store_true', help='Add Font Awesome Glyphs (http://fontawesome.io/)')
@@ -2112,7 +2112,6 @@ def setup_arguments():
 
     expert_group = parser.add_argument_group('Expert Options')
     expert_group.add_argument('--adjust-line-height', '-l',                dest='adjustLineHeight', default=False, action='store_true', help='Whether to adjust line heights (attempt to center powerline separators more evenly)')
-    expert_group.add_argument('--braille-style',                           dest='brailleStyle',     default='rectangle', type=str,      help='The style of the braille font (optional: *rectangle, circle, gapless)', choices=['rectangle', 'circle', 'gapless'])
     expert_group.add_argument('--boxdrawing',                              dest='forcebox',         default=False, action='store_true', help='Force patching in (over existing) box drawing glyphs')
     expert_group.add_argument('--cell',                                    dest='cellopt',          default=None,  type=str,            help='Adjust or query the cell size, e.g. use "0:1000:-200:800" or "?"')
     expert_group.add_argument('--configfile',                              dest='configfile',       default=False, type=str,            help='Specify a file path for configuration file (see sample: src/config.sample.cfg)')
@@ -2163,6 +2162,11 @@ def setup_arguments():
     if args.braille and not BrailleGenerator:
         logger.critical("Braille module missing (bin/scripts/braille/Braille.py), do not include Braille Glyphs")
         sys.exit(1)
+
+    args.brailleStyle = 'rectangle'
+    if args.braille:
+        args.brailleStyle = args.braille
+        args.braille = True
 
     # if you add a new font, set it to True here inside the if condition
     if args.complete:
