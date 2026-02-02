@@ -2096,7 +2096,7 @@ def setup_arguments():
     #  6  HugoSansMono NF XCn Lt It                                [X] [X] [X]
 
     sym_font_group = parser.add_argument_group('Symbol Fonts')
-    sym_font_group.add_argument('--braille',                                    dest='braille',              default=False, const='rectangle',   help='Add Braille Glyphs, can pass a string to control style (optional: *rectangle, circle, gapless)', nargs='?', choices=['rectangle', 'circle', 'gapless'])
+    sym_font_group.add_argument('--braille',                                    dest='braille',              default=False, type=str, nargs='?', help='Add Braille Glyphs, can pass a string to control style (optional: *rectangle, circle, gapless)', const='rectangle', choices=['rectangle', 'circle', 'gapless'])
     sym_font_group.add_argument('--complete', '-c',                             dest='complete',             default=False, action='store_true', help='Add all available Glyphs')
     sym_font_group.add_argument('--codicons',                                   dest='codicons',             default=False, action='store_true', help='Add Codicons Glyphs (https://github.com/microsoft/vscode-codicons)')
     sym_font_group.add_argument('--fontawesome',                                dest='fontawesome',          default=False, action='store_true', help='Add Font Awesome Glyphs (http://fontawesome.io/)')
