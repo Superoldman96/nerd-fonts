@@ -1180,7 +1180,7 @@ class font_patcher:
             {'Enabled': self.args.octicons,             'Name': "Octicons",                'Filename': "octicons/octicons.otf",                          'Exact': True,  'SymStart': 0X26A1, 'SymEnd': 0X26A1, 'SrcStart': None,   'ScaleRules': OCTI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},  # Zap
             {'Enabled': self.args.octicons,             'Name': "Octicons",                'Filename': "octicons/octicons.otf",                          'Exact': False, 'SymStart': 0xF27C, 'SymEnd': 0xF306, 'SrcStart': 0xF4A9, 'ScaleRules': OCTI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},
             {'Enabled': self.args.codicons,             'Name': "Codicons",                'Filename': "codicons/codicon.ttf",                           'Exact': True,  'SymStart': 0xEA60, 'SymEnd': 0xEC1E, 'SrcStart': None,   'ScaleRules': CODI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},
-            {'Enabled': self.args.braille,              'Name': "Braille",                 'Font'    : self.get_braille_font,                            'Exact': True,  'SymStart': 0x2800, 'SymEnd': 0x28FF, 'SrcStart': None,   'ScaleRules': None,             'Attributes': SYM_ATTR_BRAILLE},
+            {'Enabled': self.args.braille is not None,  'Name': "Braille",                 'Font'    : self.get_braille_font,                            'Exact': True,  'SymStart': 0x2800, 'SymEnd': 0x28FF, 'SrcStart': None,   'ScaleRules': None,             'Attributes': SYM_ATTR_BRAILLE},
             {'Enabled': self.args.custom,               'Name': "Custom",                  'Filename': self.args.custom,                                 'Exact': True,  'SymStart': 0x0000, 'SymEnd': 0x0000, 'SrcStart': None,   'ScaleRules': None,             'Attributes': CUSTOM_ATTR}
         ]
 
@@ -1883,7 +1883,7 @@ class font_patcher:
         width = self.font_dim["width"]
         ymax = self.font_dim["ymax"]
         ymin = self.font_dim["ymin"]
-        return get_braille_font(self.sourceFont.em, width, ymax, ymin, self.args.brailleStyle, 0.6)
+        return get_braille_font(self.sourceFont.em, width, ymax, ymin, self.args.braille, 0.6)
 
 def half_gap(gap, top):
     """ Divides integer value into two new integers """
@@ -2163,11 +2163,6 @@ def setup_arguments():
         logger.critical("Braille module missing (bin/scripts/braille/Braille.py), do not include Braille Glyphs")
         sys.exit(1)
 
-    args.brailleStyle = 'rectangle'
-    if args.braille:
-        args.brailleStyle = args.braille
-        args.braille = True
-
     # if you add a new font, set it to True here inside the if condition
     if args.complete:
         args.codicons = True
@@ -2181,10 +2176,10 @@ def setup_arguments():
         args.powerlineextra = True
         args.powersymbols = True
         args.weather = True
-        if BrailleGenerator:
-            args.braille = True
-        else:
+        if not BrailleGenerator:
             logger.warning("Braille module missing (bin/scripts/braille/Braille.py), generating font without Braille Glyphs!")
+        elif not args.braille:
+            args.braille = 'rectangle'
 
     if not args.complete:
         sym_font_args = []
