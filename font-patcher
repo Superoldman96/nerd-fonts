@@ -975,7 +975,7 @@ class font_patcher:
         }
         SYM_ATTR_BRAILLE = {
             # Don't scale because we generate font in the suitable size directly
-            'default': {'align': '', 'valign': '', 'stretch': '', 'params': {}}
+            'default': {'align': '', 'valign': '', 'stretch': '', 'params': {'careful': False}}
         }
         SYM_ATTR_HEAVYBRACKETS = {
             'default': {'align': 'c', 'valign': 'c', 'stretch': '^pa1!', 'params': {'ypadding': 0.3, 'careful': True}}
