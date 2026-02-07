@@ -2049,6 +2049,13 @@ def check_fontforge_min_version():
         logger.critical("Please use at least version: %d", minimumVersion)
         sys.exit(1)
 
+    if actualVersion == 20251009:
+        # These two commits are needed on top of 20251009 for us:
+        # https://github.com/fontforge/fontforge/commit/9d119ca0bf415e3d69086f4931fcbb39d3d85c51 (their PR 5698)
+        # https://github.com/fontforge/fontforge/commit/aedb8f2e95ddba99e8cb6446f082a356e2c2625b (their PR 5702)
+        logger.warning("Fontforge 20251009 produces unusable fonts in some cases")
+        logger.warning("Use an older or newer (after git hash aedb8f2e) version if you are affected")
+
 def check_version_with_git(version):
     """ Upgraded the version to the current git tag version (starting with 'v') """
     git = subprocess.run("git describe --tags",
