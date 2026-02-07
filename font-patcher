@@ -6,7 +6,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 # Change the script version when you edit this script:
-script_version = "4.22.0"
+script_version = "4.22.1"
 
 version = "3.4.0"
 projectName = "Nerd Fonts"
@@ -882,6 +882,27 @@ class font_patcher:
                 # box_keep = True # just scale do not copy (need to scale to fit new cell size)
                 box_enabled = False # Cowardly not scaling existing glyphs, although the code would allow this
 
+        self.sourceFont.selection.select(("ranges",), 0x2800, 0x28ff)
+        braille_glyphs_target = len(list(self.sourceFont.selection))
+        braille_glyphs_current = len(list(self.sourceFont.selection.byGlyphs))
+
+        # Automatically added Braille glyphs only for monospaced and not for Symbols Only
+        # unless they are requested specifically (i.e. not via --complete)
+        if self.args.braille == 'complete':
+            self.args.braille = 'rectangular'
+            braille_enabled = self.source_monospaced and not self.symbolsonly
+            if braille_enabled and self.args.careful and braille_glyphs_target == braille_glyphs_current:
+                # If `--careful` is given and Braille glyphs just come from `--complete`
+                # do not replace if set is already complete
+                logger.debug("Found complete Braille glyphs set. Skipping...")
+                braille_enabled = False
+        elif self.args.braille is not None:
+            braille_enabled = True
+        if braille_enabled:
+            if braille_glyphs_current > 0:
+                logger.debug("%d/%d Braille glyphs will be replaced",
+                    braille_glyphs_current, braille_glyphs_target)
+
         # Stretch 'xz' or 'pa' (preserve aspect ratio)
         # Supported params: overlap | careful | xy-ratio | dont_copy | ypadding
         # Overlap value is used horizontally but vertically limited to 0.01
@@ -1180,7 +1201,7 @@ class font_patcher:
             {'Enabled': self.args.octicons,             'Name': "Octicons",                'Filename': "octicons/octicons.otf",                          'Exact': True,  'SymStart': 0X26A1, 'SymEnd': 0X26A1, 'SrcStart': None,   'ScaleRules': OCTI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},  # Zap
             {'Enabled': self.args.octicons,             'Name': "Octicons",                'Filename': "octicons/octicons.otf",                          'Exact': False, 'SymStart': 0xF27C, 'SymEnd': 0xF306, 'SrcStart': 0xF4A9, 'ScaleRules': OCTI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},
             {'Enabled': self.args.codicons,             'Name': "Codicons",                'Filename': "codicons/codicon.ttf",                           'Exact': True,  'SymStart': 0xEA60, 'SymEnd': 0xEC1E, 'SrcStart': None,   'ScaleRules': CODI_SCALE_LIST,  'Attributes': SYM_ATTR_DEFAULT},
-            {'Enabled': self.args.braille is not None,  'Name': "Braille",                 'Font'    : self.get_braille_font,                            'Exact': True,  'SymStart': 0x2800, 'SymEnd': 0x28FF, 'SrcStart': None,   'ScaleRules': None,             'Attributes': SYM_ATTR_BRAILLE},
+            {'Enabled': braille_enabled,                'Name': "Braille",                 'Font'    : self.get_braille_font,                            'Exact': True,  'SymStart': 0x2800, 'SymEnd': 0x28FF, 'SrcStart': None,   'ScaleRules': None,             'Attributes': SYM_ATTR_BRAILLE},
             {'Enabled': self.args.custom,               'Name': "Custom",                  'Filename': self.args.custom,                                 'Exact': True,  'SymStart': 0x0000, 'SymEnd': 0x0000, 'SrcStart': None,   'ScaleRules': None,             'Attributes': CUSTOM_ATTR}
         ]
 
@@ -2179,7 +2200,7 @@ def setup_arguments():
         if not BrailleGenerator:
             logger.warning("Braille module missing (bin/scripts/braille/Braille.py), generating font without Braille Glyphs!")
         elif not args.braille:
-            args.braille = 'rectangle'
+            args.braille = 'complete'
 
     if not args.complete:
         sym_font_args = []
